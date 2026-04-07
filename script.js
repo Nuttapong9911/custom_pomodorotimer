@@ -1,9 +1,11 @@
 // Global variables
-let timeLeft = 25 * 60; // seconds
+let timeLeft = 25; // seconds
 let timerInterval;
 let currentInterval = 'pomodoro';
 let backgroundColor = '#F1F1EF'; // Default background color
 let fontColor = '#37352F'; // Default font color
+
+let pomodoroCount = 0; // Count of completed Pomodoro intervals
 
 // DOM elements
 const timeLeftEl = document.getElementById('time-left');
@@ -19,28 +21,36 @@ const backgroundColorSelect = document.getElementById('background-color');
 const fontColorSelect = document.getElementById('font-color');
 const saveBtn = document.getElementById('save-btn');
 
+const timerStatusEls = document.querySelectorAll('#timer-status');
+
 // Event listeners for interval buttons
 pomodoroIntervalBtn.addEventListener('click', () => {
   currentInterval = 'pomodoro';
-  timeLeft = 25 * 60;
+  timeLeft = 25;
+
+  pomodoroCount = 0;
+
   updateTimeLeftTextContent();
 });
 
 shortBreakIntervalBtn.addEventListener('click', () => {
   currentInterval = 'short-break';
-  timeLeft = 5 * 60;
+  timeLeft = 5;
   updateTimeLeftTextContent();
 });
 
 longBreakIntervalBtn.addEventListener('click', () => {
   currentInterval = 'long-break';
-  timeLeft = 10 * 60;
+  timeLeft = 10;
   updateTimeLeftTextContent();
 });
 
 // Event listener for start/stop button
 startStopBtn.addEventListener('click', () => {
   if (startStopBtn.textContent === 'Start') {
+    timerStatusEls.forEach((el) => {
+        el.textContent = '⏳';
+    });
     startTimer();
     startStopBtn.textContent = 'Stop';
   } else {
@@ -52,11 +62,11 @@ startStopBtn.addEventListener('click', () => {
 resetBtn.addEventListener('click', () => {
   stopTimer();
   if (currentInterval === 'pomodoro') {
-    timeLeft = 25 * 60;
+    timeLeft = 25;
   } else if (currentInterval === 'short-break') {
-    timeLeft = 5 * 60;
+    timeLeft = 5;
   } else {
-    timeLeft = 10 * 60;
+    timeLeft = 10;
   }
   updateTimeLeftTextContent();
   startStopBtn.textContent = 'Start';
@@ -95,18 +105,36 @@ function startTimer() {
     updateTimeLeftTextContent();
     if (timeLeft === 0) {
       clearInterval(timerInterval);
+      // finish pomodoro stage
       if (currentInterval === 'pomodoro') {
-        timeLeft = 5 * 60;
-        currentInterval = 'short-break';
-        startTimer();
+        pomodoroCount++;
+
+        if (pomodoroCount == 2) {
+          timeLeft = 10;
+          currentInterval = 'long-break';
+        } else {
+          timeLeft = 5;
+          currentInterval = 'short-break';
+        }
+
+      // finish short break stage
       } else if (currentInterval === 'short-break') {
-        timeLeft = 10 * 60;
-        currentInterval = 'long-break';
-        startTimer();
+        timeLeft = 25;
+        currentInterval = 'pomodoro';
+
+      // finish long break stage
       } else {
-        timeLeft = 25 * 60;
+        pomodoroCount = 0;
+
+        timeLeft = 25;
         currentInterval = 'pomodoro';
       }
+
+      timerStatusEls.forEach((el) => {
+        el.textContent = '🎉';
+      });
+      updateTimeLeftTextContent();
+      startStopBtn.textContent = 'Start';
     }
   }, 1000);
 }
